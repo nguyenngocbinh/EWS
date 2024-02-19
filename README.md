@@ -3,11 +3,7 @@
 ## Tổng Quan
 Vận hành hàng tháng mô hình Bscore
 
-## Cài Đặt
-Hướng dẫn cách cài đặt và thiết lập dự án.
-
 ## Sử Dụng
-Giải thích cách sử dụng dự án, bao gồm bất kỳ lệnh hoặc cấu hình nào cần thiết.
 
 ### Bước 1: Import Dữ Liệu
 1. Các bảng IFRS9 kéo từ DB2 sang (Code day bang DB2 sang SQL.ipynb)
