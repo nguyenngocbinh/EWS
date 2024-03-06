@@ -71,11 +71,20 @@ ETL
     ```yaml
     source_table: 'CSO.FCC_CYTB_RATES_HISTORY_OFFICIAL'
     target_table: 'EXCHANGE_RATE'
-    source_columns: 
+    source_columns:
+      - 'column1'
+      - 'column2'
     source_date_column: 'RATE_DATE'
-    target_columns: 
-    target_date_column: 'RATE_DATE'
-    target_data_types: 
+    target_columns:
+      - 'col1'
+      - 'col2'
+    target_date_column: 'TARGET_RATE_DATE'
+    target_data_types:
+      column1: 'VARCHAR(50)'
+      column2: 'INTEGER'
+    tgt_primary_key_columns:
+      - 'col1'
+      - 'col2'
     ```
 
 3. **Run Script**:
