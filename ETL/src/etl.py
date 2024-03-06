@@ -30,7 +30,8 @@ class ETL:
             'source_date_column': 'RATE_DATE',
             'target_columns': None,
             'target_date_column': 'TARGET_RATE_DATE',
-            'target_data_types': None
+            'target_data_types': None,
+            'target_primary_key_columns': ['column1', 'column2']
         }
         """
         
@@ -48,6 +49,10 @@ class ETL:
         tgt_cols = etl_config.get('target_columns')
         tgt_date_col = etl_config.get('target_date_column')
         tgt_data_types = etl_config.get('target_data_types')
+        tgt_primary_key_cols = etl_config.get('target_primary_key_columns', [])
+
+        # Record ETL start time
+        start_time = datetime.now()
         
         # Check if lengths of src_cols and tgt_cols are different
         if src_cols and tgt_cols and len(src_cols) != len(tgt_cols):
@@ -61,16 +66,16 @@ class ETL:
         max_tgt_date_query = f"SELECT MAX({tgt_date_col}) FROM {tgt_table}"
         max_tgt_date = pd.read_sql(max_tgt_date_query, self.tgt_cnxn).iloc[0, 0]
                 
-        # Extract data from source
-        src_query = f"SELECT {', '.join(src_cols) if src_cols else '*'} FROM {src_table} WHERE {src_date_col} > '{max_tgt_date}'"
-        src_data = pd.read_sql(src_query, self.src_cnxn)
+        # Extract data from source where target primary key columns are not null
+        not_null_conditions = " AND ".join([f"{col} IS NOT NULL" for col in tgt_primary_key_cols])
+        src_query = f"SELECT {', '.join(src_cols) if src_cols else '*'} FROM {src_table} WHERE {src_date_col} > '{max_tgt_date}' AND {not_null_conditions}"
 
         if src_data.empty:
             logging.warning("Source data is empty. No rows extracted.")
         else:
-            logging.info("ETL from %s to %s started.", src_table, tgt_table)
+            logging.info("ETL from %s to %s started at %s.", src_table, tgt_table, start_time.strftime('%Y-%m-%d %H:%M:%S'))
             
-        logging.info("Maximum target data date: %s", max_tgt_date)
+        logging.info("Last maximum target data date: %s", max_tgt_date)
 
         # Rename columns to correspond to target table
         if tgt_cols:
@@ -83,7 +88,9 @@ class ETL:
         # Load data into target
         src_data.to_sql(tgt_table, self.tgt_cnxn, if_exists='append', index=False, chunksize=100000)
         
-    
+        # Record ETL finish time
+        finish_time = datetime.now()
+        logging.info("ETL finished at %s. Time elapsed: %s", finish_time.strftime('%Y-%m-%d %H:%M:%S'), finish_time - start_time)
 
 
 
