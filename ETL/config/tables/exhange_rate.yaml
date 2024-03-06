@@ -1,0 +1,7 @@
+source_table: 'CSO.FCC_CYTB_RATES_HISTORY_OFFICIAL'
+target_table: 'EXCHANGE_RATE'
+source_columns: 
+source_date_column: 'RATE_DATE'
+target_columns: 
+target_date_column: 'RATE_DATE'
+target_data_types: 
