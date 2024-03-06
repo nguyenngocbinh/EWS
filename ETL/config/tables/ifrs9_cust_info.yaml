@@ -1,0 +1,43 @@
+source_table: 'DMT.VW_IFRS9_CUST_INFO'
+target_table: 'IFRS9_CUST_INFO'
+source_columns: 
+  - RPT_DT_DIM_ID
+  - PROCESS_DATE
+  - CST_DIM_ID
+  - CUSTOMER_ID
+  - IP_STATUS
+  - CUSTOMER_TYPE
+  - CG_SEGMENT
+  - FIRST_ACC_OPEN_DATE
+  - MTH_IN_REL
+  - YR_IN_REL
+  - AGE
+  - EDUCATION
+  - ACCOMMODATION_ADDR
+  - MARITAL_STATUS
+  - YR_IN_BUSSINESS
+  - FS_ASSET
+  - FS_SALES
+  - DATE_OF_BIRTH
+  - CUSTOMER_RATING
+  - PD_RATING
+  - LAST_B1X_DATE
+  - LAST_B2X_DATE
+  - LN_CLASS_TPBANK
+  - LN_CIC_CLASS
+  - MAX_LN_CLASS_L3M
+  - DPD
+  - DPD_RSK_PNY
+  - DPD_STCH
+  - NUM_XDPD_L6M
+  - NUM_30DPD_L6M
+  - MTH_SNC_B2X_L6M
+  - MTH_SNC_XDPD_L6M
+  - BAN_NO
+  - WRITE_OFF
+  - EXT_NBR
+  - COVID19
+source_date_column: 'PROCESS_DATE'
+target_columns: 
+target_date_column: 'PROCESS_DATE'
+target_data_types: 

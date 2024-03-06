@@ -1,0 +1,7 @@
+source_table: 'DMT.VW_IFRS9_CTR_CL'
+target_table: 'IFRS9_CTR_CL'
+source_columns: 
+source_date_column: 'PROCESS_DATE'
+target_columns: 
+target_date_column: 'PROCESS_DATE'
+target_data_types: 

@@ -1,0 +1,29 @@
+source_table: 'DMT.VW_IFRS9_CST_CC'
+target_table: 'IFRS9_CST_CC'
+source_columns: 
+  - MONTH_ID
+  - RPT_DT_DIM_ID
+  - CST_DIM_ID
+  - CUSTOMER_ID
+  - CYCLE_END_DATE
+  - BAL_AT_CYCLE_END
+  - BAL_AT_END_MONTH
+  - GROSS_PAYMENT_LAGGED
+  - GROSS_PAYMENT_INMONTH
+  - AVG_CC_PMT_VS_STM_BAL
+  - AVG_CC_AMT
+  - NBR_USED_CC
+  - MTH_SNC_10DPD
+  - MTH_SNC_30DPD
+  - MTH_SNC_60DPD
+  - MTH_SNC_90DPD
+  - NUM_TM_10DPD
+  - NUM_TM_30DPD
+  - NUM_TM_60DPD
+  - NUM_TM_90DPD
+  - AVG_UTIL_CC_RATE
+  - PROCESS_DATE
+source_date_column: 'PROCESS_DATE'
+target_columns: 
+target_date_column: 'PROCESS_DATE'
+target_data_types: 

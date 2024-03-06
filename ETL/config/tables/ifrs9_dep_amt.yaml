@@ -1,0 +1,42 @@
+source_table: 'DMT.VW_IFRS9_DEP_AMT'
+target_table: 'IFRS9_DEP_AMT'
+source_columns: 
+  - RPT_DT_DIM_ID
+  - CST_DIM_ID
+  - CUSTOMER_ID
+  - PROCESS_DATE
+  - HAV_TPBS_ACC
+  - USE_PAY_ROLL
+  - TD_BAL
+  - TD_BAL_L3M
+  - TD_BAL_L6M
+  - TD_BAL_AVG
+  - TD_BAL_L3M_AVG
+  - TD_BAL_L6M_AVG
+  - TD_BAL_ONL_AVG
+  - TD_BAL_LEGACY_AVG
+  - TD_BAL_ONL_LEGACY_AVG
+  - CA_BAL
+  - CA_BAL_L3M
+  - CA_BAL_L6M
+  - CA_BAL_AVG
+  - CA_BAL_L3M_AVG
+  - CA_BAL_L6M_AVG
+  - MIN_CA_BAL_L6M
+  - CA_TD_BAL_LEGACY
+  - CA_TD_BAL_LEGACY_L3M
+  - CA_TD_BAL_LEGACY_L6M
+  - AVG_CA_TD_LEGACY_BAL
+  - AVG_CA_TD_BAL_LEGACY_L3M
+  - AVG_CA_TD_BAL_LEGACY_L6M
+  - AVG_CA_TD_BAL_LGY_L3M_VS_L6M
+  - AVG_CA_TD_BAL_LGY_OS_ONBS_L3M
+  - AVG_CA_TD_BAL_LGY_DBT_SVC_L6M
+  - TOTAL_BAL
+  - TOTAL_BAL_AVG
+  - BAL_L6M
+  - AVG_BAL_L6M
+source_date_column: 'PROCESS_DATE'
+target_columns: 
+target_date_column: 'PROCESS_DATE'
+target_data_types: 

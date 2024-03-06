@@ -1,0 +1,26 @@
+source_table: 'DMT.VW_IFRS9_LIMIT'
+target_table: 'IFRS9_LIMIT'
+source_columns: 
+  - RPT_DT_DIM_ID
+  - PROCESS_DATE
+  - CST_DIM_ID
+  - CUSTOMER_ID
+  - AC_AR_DIM_ID
+  - LINE_ID
+  - MAIN_LINE_ID
+  - CCY_DIM_ID
+  - LIMIT_CURRENCY
+  - APPROVAL_DATE
+  - EXPIRY_DATE
+  - ADVISED_AMOUNT
+  - LIMIT_GROUP
+  - LIMIT_TYPE
+  - REVOLVING_TYPE
+  - UTILIZED_LIMIT
+  - UNDRAWN_LIMIT
+  - TYPE
+  - RECORD_STATUS
+source_date_column: 'PROCESS_DATE'
+target_columns: 
+target_date_column: 'PROCESS_DATE'
+target_data_types: 
