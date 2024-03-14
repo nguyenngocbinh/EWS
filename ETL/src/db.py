@@ -132,3 +132,119 @@ class DatabaseConnector:
         with self.sqlserver_engine.connect() as connection:
             result = connection.execute(query)
             return result
+
+class TableModifier:
+    """
+    A class for modifying tables in a SQL database.
+
+    Attributes:
+    engine (sqlalchemy.engine.base.Engine): The SQLAlchemy engine connected to the database.
+    """
+
+    def __init__(self, engine):
+        """
+        Initializes the TableModifier class.
+
+        Args:
+        engine (sqlalchemy.engine.base.Engine): The SQLAlchemy engine connected to the database.
+        """
+        self.engine = engine
+    
+    def get_original_data_types(self, table, columns):
+        """
+        Retrieves the original data types of specified columns in a table.
+
+        Args:
+        table (str): The name of the table.
+        columns (list): A list of column names.
+
+        Returns:
+        dict: A dictionary mapping column names to their original data types.
+        """
+        original_data_types = {}
+        with self.engine.connect() as connection:
+            for column in columns:
+                _query = f"SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table}' AND COLUMN_NAME = '{column}'"
+                result = connection.execute(_query)
+                data_type = result.fetchone()
+                if data_type:
+                    if data_type[0] == 'date':
+                        original_data_types[column] = 'date'
+                    else:
+                        original_data_types[column] = f"{data_type[0]}({data_type[1]})" if data_type[1] else data_type[0]
+                else:
+                    print(f"Column '{column}' not found in table '{table}'")
+                    return
+        return original_data_types
+
+    def alter_columns(self, table, columns, original_data_types):
+        """
+        Alters specified columns in a table to not allow null values.
+
+        Args:
+        table (str): The name of the table.
+        columns (list): A list of column names.
+        original_data_types (dict): A dictionary mapping column names to their original data types.
+        """
+        alter_sql_commands = []
+        for column in columns:
+            alter_sql_commands.append(f"ALTER TABLE {table} ALTER COLUMN {column} {original_data_types[column]} NOT NULL")
+        with self.engine.connect() as connection:
+            for command in alter_sql_commands:
+                connection.execute(command)
+
+    def create_index(self, table, columns):
+        """
+        Creates an index on specified columns in a table.
+
+        Args:
+        table (str): The name of the table.
+        columns (list): A list of column names.
+        """
+        index_name = f"idx_{table.split('.')[-1]}"
+        
+        # Generate SQL commands to create index
+        index_sql_command = f"CREATE INDEX idx_{table.split('.')[-1]} ON {table} ({', '.join(columns)})"
+        
+        # Generate SQL command to drop existing index
+        drop_index_sql_command = f"DROP INDEX IF EXISTS idx_{table.split('.')[-1]} ON {table}"
+
+        with self.engine.connect() as connection:
+            # Drop existing primary key constraint if it exists
+            connection.execute(drop_index_sql_command)
+            # Create new index 
+            connection.execute(index_sql_command)
+
+    def create_primary_key(self, table, columns):
+        """
+        Creates a primary key constraint on specified columns in a table.
+
+        Args:
+        table (str): The name of the table.
+        columns (list): A list of column names.
+        """
+        pk_name = f"PK_{table.split('.')[-1]}"
+        # Generate SQL command to drop existing primary key constraint
+        drop_primary_key_sql_command = f"ALTER TABLE {table} DROP CONSTRAINT IF EXISTS PK_{table.split('.')[-1]}"
+        
+        # Generate SQL commands to create primary key
+        primary_key_sql_command = f"ALTER TABLE {table} ADD CONSTRAINT PK_{table.split('.')[-1]} PRIMARY KEY ({', '.join(columns)})"
+
+        with self.engine.connect() as connection:
+            # Drop existing primary key constraint if it exists
+            connection.execute(drop_primary_key_sql_command)
+            # Create new primary key
+            connection.execute(primary_key_sql_command)
+
+    def alter_columns_and_create_index_primary(self, table, columns):
+        """
+        Alters specified columns to not allow null values, creates an index, and sets a primary key constraint.
+
+        Args:
+        table (str): The name of the table.
+        columns (list): A list of column names.
+        """
+        original_data_types = self.get_original_data_types(table, columns)
+        self.alter_columns(table, columns, original_data_types)
+        self.create_index(table, columns)
+        self.create_primary_key(table, columns)
