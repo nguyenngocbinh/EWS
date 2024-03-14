@@ -80,8 +80,8 @@ ETL
       - 'col2'
     target_date_column: 'TARGET_RATE_DATE'
     target_data_types:
-      column1: 'VARCHAR(50)'
-      column2: 'INTEGER'
+      column1: 'object'
+      column2: 'int64'
     tgt_primary_key_columns:
       - 'col1'
       - 'col2'
@@ -92,7 +92,7 @@ ETL
     Execute the Python script to start the ETL process.
 
     ```
-    python scripts\etl_exchange_rate.py
+    python main.py
     ```
 
 ### Contributors
