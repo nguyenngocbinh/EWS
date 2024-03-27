@@ -67,14 +67,14 @@ def create_sql_server_engine(sql_server_config=None):
     elif isinstance(sql_server_config, str):   
         sql_server_config = load_config(sql_server_config) 
 
-    sqlserver_driver = '{SQL Server}'
+    sqlserver_driver = '{ODBC Driver 17 for SQL Server}'
     server = sql_server_config['server']
     database = sql_server_config['database']
     user = sql_server_config['user']
     password = sql_server_config['password']
     sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};UID={user};PWD={password}"
     odbc_connect_str = quote(sqlserver_cnxn_str)
-    return create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_connect_str}")
+    return create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_connect_str}", use_setinputsizes=False)
 
 
 class DatabaseConnector:
@@ -118,7 +118,7 @@ class DatabaseConnector:
         return create_engine(db2_url)
 
     def _create_sqlserver_engine(self):
-        sqlserver_driver = '{SQL Server}'
+        sqlserver_driver = '{ODBC Driver 17 for SQL Server}'
         sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={self.sqlserver_server};DATABASE={self.sqlserver_database};UID={self.sqlserver_user};PWD={self.sqlserver_pw}"
         odbc_connect_str = quote(sqlserver_cnxn_str)
         return create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_connect_str}")
