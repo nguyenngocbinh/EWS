@@ -54,13 +54,14 @@ def create_db2_engine(db2_config=None):
         logging.error(f"Error occurred while creating DB2 engine: {str(e)}")
         raise  # Re-raise the exception
 
-def create_sql_server_engine(sql_server_config=None):
+def create_sql_server_engine(sql_server_config=None, use_windows_auth=True):
     """
     Create a SQL Server database engine.
 
     Parameters:
     - sql_server_config (dict or str, optional): Dictionary containing SQL Server database connection parameters or path to the YAML configuration file.
       If None, default configuration from 'config/sql_server_config.yaml' will be used.
+    - use_windows_auth (bool, optional): Flag indicating whether to use Windows Authentication. Default is False (use SQL Server authentication).
 
     Returns:
     - engine: SQL Server database engine.
@@ -85,14 +86,20 @@ def create_sql_server_engine(sql_server_config=None):
         sqlserver_driver = '{ODBC Driver 17 for SQL Server}'
         server = sql_server_config['server']
         database = sql_server_config['database']
-        user = sql_server_config['user']
-        password = sql_server_config['password']
-        sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};UID={user};PWD={password}"
+        if use_windows_auth:
+            sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};Trusted_Connection=yes"
+        else:
+            user = sql_server_config['user']
+            password = sql_server_config['password']
+            sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};UID={user};PWD={password}"
         odbc_connect_str = quote(sqlserver_cnxn_str)
         engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_connect_str}") # , use_setinputsizes=False
 
         # Log SQL Server engine creation
-        logging.info(f"SQL Server engine created with server '{server}', database '{database}', and user '{user}'.")
+        if use_windows_auth:
+            logging.info(f"SQL Server engine created with Windows Authentication, server '{server}', and database '{database}'.")
+        else:
+            logging.info(f"SQL Server engine created with server '{server}', database '{database}', and user '{user}'.")
         return engine
     except Exception as e:
         # Log any exceptions
