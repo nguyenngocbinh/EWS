@@ -3,6 +3,11 @@ from sqlalchemy import create_engine
 from urllib.parse import quote
 from src.utils import load_config
 import os
+import logging
+
+# Set up logging configuration
+logging.basicConfig(filename='database_engine.log', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 def create_db2_engine(db2_config=None):
     """
@@ -25,20 +30,29 @@ def create_db2_engine(db2_config=None):
     }
     engine = create_db2_engine(db2_config)
     """
-    # Load etl_config from YAML file if a path is provided
-    if db2_config is None:        
-        default_config_path = 'config/db2_config.yaml'
-        db2_config = load_config(default_config_path)
-    elif isinstance(db2_config, str):   
-        db2_config = load_config(db2_config) 
+    try:
+        # Load etl_config from YAML file if a path is provided
+        if db2_config is None:        
+            default_config_path = 'config/db2_config.yaml'
+            db2_config = load_config(default_config_path)
+        elif isinstance(db2_config, str):   
+            db2_config = load_config(db2_config) 
 
-    user = db2_config['user']
-    password = quote(db2_config['password'])
-    host = db2_config['host']
-    port = db2_config['port']
-    database = db2_config['database']
-    db2_url = f"ibm_db_sa://{user}:{password}@{host}:{port}/{database}"
-    return create_engine(db2_url)
+        user = db2_config['user']
+        password = quote(db2_config['password'])
+        host = db2_config['host']
+        port = db2_config['port']
+        database = db2_config['database']
+        db2_url = f"ibm_db_sa://{user}:{password}@{host}:{port}/{database}"
+        engine = create_engine(db2_url)
+
+        # Log DB2 engine creation
+        logging.info(f"DB2 engine created with user '{user}', host '{host}', port '{port}', and database '{database}'.")
+        return engine
+    except Exception as e:
+        # Log any exceptions
+        logging.error(f"Error occurred while creating DB2 engine: {str(e)}")
+        raise  # Re-raise the exception
 
 def create_sql_server_engine(sql_server_config=None):
     """
@@ -60,21 +74,30 @@ def create_sql_server_engine(sql_server_config=None):
     }
     engine = create_sql_server_engine(sql_server_config)
     """    
-    # Load etl_config from YAML file if a path is provided
-    if sql_server_config is None:
-        default_config_path = os.path.join('config', 'sql_server_config.yaml')
-        sql_server_config = load_config(default_config_path)
-    elif isinstance(sql_server_config, str):   
-        sql_server_config = load_config(sql_server_config) 
+    try:
+        # Load etl_config from YAML file if a path is provided
+        if sql_server_config is None:
+            default_config_path = os.path.join('config', 'sql_server_config.yaml')
+            sql_server_config = load_config(default_config_path)
+        elif isinstance(sql_server_config, str):   
+            sql_server_config = load_config(sql_server_config) 
 
-    sqlserver_driver = '{ODBC Driver 17 for SQL Server}'
-    server = sql_server_config['server']
-    database = sql_server_config['database']
-    user = sql_server_config['user']
-    password = sql_server_config['password']
-    sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};UID={user};PWD={password}"
-    odbc_connect_str = quote(sqlserver_cnxn_str)
-    return create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_connect_str}", use_setinputsizes=False)
+        sqlserver_driver = '{ODBC Driver 17 for SQL Server}'
+        server = sql_server_config['server']
+        database = sql_server_config['database']
+        user = sql_server_config['user']
+        password = sql_server_config['password']
+        sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};UID={user};PWD={password}"
+        odbc_connect_str = quote(sqlserver_cnxn_str)
+        engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_connect_str}") # , use_setinputsizes=False
+
+        # Log SQL Server engine creation
+        logging.info(f"SQL Server engine created with server '{server}', database '{database}', and user '{user}'.")
+        return engine
+    except Exception as e:
+        # Log any exceptions
+        logging.error(f"Error occurred while creating SQL Server engine: {str(e)}")
+        raise  # Re-raise the exception
 
 
 class DatabaseConnector:
@@ -149,7 +172,8 @@ class TableModifier:
         engine (sqlalchemy.engine.base.Engine): The SQLAlchemy engine connected to the database.
         """
         self.engine = engine
-    
+        self.logger = logging.getLogger(__name__)  # Create a logger instance
+
     def get_original_data_types(self, table, columns):
         """
         Retrieves the original data types of specified columns in a table.
@@ -173,7 +197,7 @@ class TableModifier:
                     else:
                         original_data_types[column] = f"{data_type[0]}({data_type[1]})" if data_type[1] else data_type[0]
                 else:
-                    print(f"Column '{column}' not found in table '{table}'")
+                    self.logger.error(f"Column '{column}' not found in table '{table}'")
                     return
         return original_data_types
 
@@ -192,6 +216,7 @@ class TableModifier:
         with self.engine.connect() as connection:
             for command in alter_sql_commands:
                 connection.execute(command)
+        self.logger.info(f"Columns {', '.join(columns)} in table {table} altered successfully.")
 
     def create_index(self, table, columns):
         """
@@ -214,6 +239,7 @@ class TableModifier:
             connection.execute(drop_index_sql_command)
             # Create new index 
             connection.execute(index_sql_command)
+        self.logger.info(f"Index created successfully on columns {', '.join(columns)} in table {table}.")
 
     def create_primary_key(self, table, columns):
         """
@@ -235,6 +261,7 @@ class TableModifier:
             connection.execute(drop_primary_key_sql_command)
             # Create new primary key
             connection.execute(primary_key_sql_command)
+        self.logger.info(f"Primary key constraint created successfully on columns {', '.join(columns)} in table {table}.")
 
     def alter_columns_and_create_index_primary(self, table, columns):
         """
@@ -245,6 +272,10 @@ class TableModifier:
         columns (list): A list of column names.
         """
         original_data_types = self.get_original_data_types(table, columns)
-        self.alter_columns(table, columns, original_data_types)
-        self.create_index(table, columns)
-        self.create_primary_key(table, columns)
+        if original_data_types:
+            self.alter_columns(table, columns, original_data_types)
+            self.create_index(table, columns)
+            self.create_primary_key(table, columns)
+            self.logger.info(f"Columns altered, index created, and primary key constraint set on table {table}.")
+        else:
+            self.logger.error(f"Unable to alter columns, create index, and set primary key constraint on table {table}.")
