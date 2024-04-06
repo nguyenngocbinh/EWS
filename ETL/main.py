@@ -23,6 +23,7 @@ def main():
     etl_obj.etl_db2_to_sqlserver('config/tables/ifrs9_ctr_cl.yaml')
     etl_obj.etl_db2_to_sqlserver('config/tables/ifrs9_ctr_lc.yaml')
     etl_obj.etl_db2_to_sqlserver('config/tables/ifrs9_ctr_od.yaml')
+    etl_obj.etl_db2_to_sqlserver('config/tables/ifrs9_ctr_cc.yaml')
     etl_obj.etl_db2_to_sqlserver('config/tables/ifrs9_cust_info.yaml')
     etl_obj.etl_db2_to_sqlserver('config/tables/ifrs9_dep_amt.yaml')
     etl_obj.etl_db2_to_sqlserver('config/tables/ifrs9_dep_amt_txn.yaml')
