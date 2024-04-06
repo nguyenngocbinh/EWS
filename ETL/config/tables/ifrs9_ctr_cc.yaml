@@ -1,0 +1,10 @@
+source_table: 'DMT.VW_IFRS9_CTR_CC'
+target_table: 'IFRS9_CTR_CC'
+source_columns: 
+source_date_column: 'PROCESS_DATE'
+target_columns: 
+target_date_column: 'PROCESS_DATE'
+target_data_types: 
+target_primary_key_columns:
+  - PROCESS_DATE
+  - CONTRACT_ID
