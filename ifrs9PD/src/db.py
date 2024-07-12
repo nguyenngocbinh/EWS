@@ -1,5 +1,5 @@
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from urllib.parse import quote
 import os
@@ -394,8 +394,12 @@ class TableModifier:
         else:
             self.logger.error(f"Unable to alter columns, create index, and set primary key constraint on table {table}.")
 
-def load_config(config_file):
-    """Load configuration from YAML file."""
-    with open(config_file, 'r') as file:
-        config = yaml.safe_load(file)
-    return config
+# Function to call stored procedure
+def call_stored_procedure(engine, proc_name, params):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text(f"EXEC {proc_name} {', '.join([':p' + str(i) for i in range(len(params))])}"), {f'p{i}': params[i] for i in range(len(params))})
+            return result.fetchall()
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        raise
