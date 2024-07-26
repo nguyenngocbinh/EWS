@@ -15,7 +15,7 @@ LANGUAGE SQL
 BEGIN
     
     -- Drop the global temporary table if it exists
-    DROP TABLE SESSION.tmp_filter_date;
+    DROP TABLE IF EXISTS SESSION.tmp_filter_date;
 
     -- Create the global temporary table
     DECLARE GLOBAL TEMPORARY TABLE SESSION.tmp_filter_date (
@@ -409,7 +409,7 @@ WHERE x.RPT_DT = y.RPT_DT
     AND x.MA_CIC = y.MA_CIC;
 
 -- CLEAR TMP
-    DROP TABLE SESSION.tmp_filter_date;
+    DROP TABLE IF EXISTS SESSION.tmp_filter_date;
 	DROP TABLE IF EXISTS SESSION.tmp_CIC_RB06_DUNO_12M;
 	DROP TABLE IF EXISTS SESSION.tmp_rn1;
 	DROP TABLE IF EXISTS SESSION.tmp_grp12;
