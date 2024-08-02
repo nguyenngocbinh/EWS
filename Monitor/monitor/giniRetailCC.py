@@ -7,7 +7,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import types
 
-def retailCC():
+def giniRetailCC():
     # Configure logging
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ def retailCC():
 
     # Calculate performance for the date range
     logger.info("Calculating performance metrics.")
-    result = performance_calculator.calculate_performance(start_date, end_date)
+    result = performance_calculator.calculate_gini_ks(start_date, end_date)
 
     # Save the result to the database
     table_name = 'GINI_Bscore'
