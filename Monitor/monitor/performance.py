@@ -87,7 +87,7 @@ class PortfolioPerformance:
         
         return gini, ks_statistic, ks_pvalue
 
-    def calculate_performance(self, start_date, end_date):
+    def calculate_gini_ks(self, start_date, end_date):
         """
         Calculates performance metrics for each portfolio within a date range, considering only the end of month dates.
 
