@@ -13,7 +13,7 @@ deploy_to_github:
     - git clone --mirror https://oauth2:$GITLAB_PERSONAL_ACCESS_TOKEN@gitlab.com/nguyenngocbinh/ews.git || (echo "Clone failed"; exit 1)
     - cd ews.git
     - echo "Adding GitHub remote..."
-    - git remote add github https://$GITHUB_TOKEN@github.com/your_github_username/your_github_repo.git
+    - git remote add github https://$GITHUB_TOKEN@github.com/nguyenngocbinh/ews.git
     - echo "Pushing to GitHub..."
     - git push --mirror github || (echo "Push failed"; exit 1)
   only:
