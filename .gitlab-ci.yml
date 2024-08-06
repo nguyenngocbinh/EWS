@@ -18,6 +18,3 @@ deploy_to_github:
     - git push --mirror github || (echo "Push failed"; exit 1)
   only:
     - main
-  except:
-    changes:
-      - .gitlab-ci.yml
