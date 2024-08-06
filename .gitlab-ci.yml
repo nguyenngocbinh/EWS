@@ -10,7 +10,7 @@ deploy_to_github:
     - git config --global user.email "nguyenngocbinhneu@gmail.com"
     - git config --global user.name "Nguyen Ngoc Binh"
     - git clone --mirror https://$CI_JOB_TOKEN@gitlab.com/nguyenngocbinh/ews.git
-    - cd your_gitlab_repo.git
+    - cd ews.git
     - git remote add github https://$GITHUB_TOKEN@github.com/nguyenngocbinh/ews.git
     - git push --mirror github
   only:
