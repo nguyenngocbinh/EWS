@@ -9,7 +9,7 @@ deploy_to_github:
   script:
     - git config --global user.email "nguyenngocbinhneu@gmail.com"
     - git config --global user.name "Nguyen Ngoc Binh"
-    - git clone --mirror https://$CI_JOB_TOKEN@gitlab.com/nguyenngocbinh/ews.git
+    - git clone --mirror https://oauth2:$CI_JOB_TOKEN@gitlab.com/nguyenngocbinh/ews.git
     - cd ews.git
     - git remote add github https://$GITHUB_TOKEN@github.com/nguyenngocbinh/ews.git
     - git push --mirror github
