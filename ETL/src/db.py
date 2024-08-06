@@ -1,14 +1,30 @@
 import pandas as pd
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from urllib.parse import quote
-from src.utils import load_config
 import os
 import logging
+import yaml
+import pyodbc
+
 
 # Set up logging configuration
 logging.basicConfig(filename='database_engine.log', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
+def load_config(file_path):
+    """
+    Load configuration from a YAML file.
+
+    Parameters:
+    - file_path (str): Path to the YAML configuration file.
+
+    Returns:
+    - dict: Configuration parameters.
+    """
+    with open(file_path, 'r') as file:
+        return yaml.safe_load(file)
+    
 def create_db2_engine(db2_config=None):
     """
     Create a DB2 database engine.
@@ -106,7 +122,162 @@ def create_sql_server_engine(sql_server_config=None, use_windows_auth=True):
         logging.error(f"Error occurred while creating SQL Server engine: {str(e)}")
         raise  # Re-raise the exception
 
+class SQLServerConnector:
+    def __init__(self, config_path=None, use_windows_auth=True):
+        """
+        Initialize the SQLServerConnector with configuration settings.
 
+        Parameters:
+        - config_path (str, optional): Path to the YAML configuration file.
+          If None, default configuration from 'config/sql_server_config.yaml' will be used.
+        - use_windows_auth (bool, optional): Flag indicating whether to use Windows Authentication. Default is True.
+        """
+        self.config_path = config_path or os.path.join('config', 'sql_server_config.yaml')
+        self.use_windows_auth = use_windows_auth
+        self.engine = None
+
+    def load_config(self, file_path):
+        """
+        Load configuration from a YAML file.
+
+        Parameters:
+        - file_path (str): Path to the YAML configuration file.
+
+        Returns:
+        - dict: Configuration parameters.
+        """
+        with open(file_path, 'r') as file:
+            return yaml.safe_load(file)
+
+    def connect(self):
+        """
+        Create a SQL Server database engine and connect to the database.
+        """
+        try:
+            sql_server_config = self.load_config(self.config_path)
+            
+            sqlserver_driver = '{ODBC Driver 17 for SQL Server}'
+            server = sql_server_config['server']
+            database = sql_server_config['database']
+            
+            if self.use_windows_auth:
+                sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};Trusted_Connection=yes"
+            else:
+                user = sql_server_config['user']
+                password = sql_server_config['password']
+                sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};UID={user};PWD={password}"
+            
+            odbc_connect_str = quote(sqlserver_cnxn_str)
+            self.engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_connect_str}")
+
+            # Log SQL Server engine creation
+            if self.use_windows_auth:
+                logging.info(f"SQL Server engine created with Windows Authentication, server '{server}', and database '{database}'.")
+            else:
+                logging.info(f"SQL Server engine created with server '{server}', database '{database}', and user '{user}'.")
+        
+        except (SQLAlchemyError, Exception) as e:
+            logging.error(f"Error occurred while creating SQL Server engine: {str(e)}")
+            raise  # Re-raise the exception
+
+    def execute_query(self, query):
+        """
+        Execute a query and return the results.
+
+        Parameters:
+        - query (str): The SQL query to execute.
+
+        Returns:
+        - list: Query results.
+        """
+        if not self.engine:
+            raise ConnectionError("Database engine is not connected.")
+        
+        try:
+            with self.engine.connect() as connection:
+                result = connection.execute(query)
+                return result.fetchall()
+        
+        except (SQLAlchemyError, Exception) as e:
+            logging.error(f"Error occurred while executing query: {str(e)}")
+            raise  # Re-raise the exception
+
+    def close(self):
+        """
+        Close the database connection.
+        """
+        if self.engine:
+            self.engine.dispose()
+            self.engine = None
+            logging.info("Database connection closed.")
+
+class DatabaseHandler(logging.Handler):
+    def __init__(self, sql_server_config=None, use_windows_auth=True):
+        super().__init__()
+        self.sql_server_config = sql_server_config
+        self.use_windows_auth = use_windows_auth
+        self.connection = None
+        self._connect_to_db()
+
+    def _connect_to_db(self):
+        try:
+            # Load config from YAML file if a path is provided
+            if self.sql_server_config is None:
+                default_config_path = os.path.join('config', 'sql_server_config.yaml')
+                self.sql_server_config = load_config(default_config_path)
+            elif isinstance(self.sql_server_config, str):
+                self.sql_server_config = load_config(self.sql_server_config)
+
+            sqlserver_driver = '{ODBC Driver 17 for SQL Server}'
+            server = self.sql_server_config['server']
+            database = self.sql_server_config['database']
+            if self.use_windows_auth:
+                sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};Trusted_Connection=yes"
+            else:
+                user = self.sql_server_config['user']
+                password = self.sql_server_config['password']
+                sqlserver_cnxn_str = f"DRIVER={sqlserver_driver};SERVER={server};DATABASE={database};UID={user};PWD={password}"
+            
+            self.connection = pyodbc.connect(sqlserver_cnxn_str)
+        except pyodbc.Error as e:
+            print(f"Error connecting to MSSQL database: {e}")
+
+    def emit(self, record):
+        if self.connection is None or not self._is_connection_valid():
+            self._connect_to_db()
+
+        if self.connection:
+            self._insert_log_record(record)
+
+    def _is_connection_valid(self):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.close()
+            return True
+        except pyodbc.Error:
+            return False
+
+    def _insert_log_record(self, record):
+        query = """
+            INSERT INTO etl_logs (level, message, logger_name, func_name, line_no)
+            VALUES (?, ?, ?, ?, ?)
+        """
+        data = (record.levelname, record.getMessage(), record.name, record.funcName, record.lineno)
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute(query, data)
+            self.connection.commit()
+        except pyodbc.Error as e:
+            print(f"Error inserting log record: {e}")
+        finally:
+            cursor.close()
+
+    def close(self):
+        if self.connection:
+            self.connection.close()
+        super().close()
+        
 class DatabaseConnector:
     def __init__(self, db2_user, db2_password, db2_host, db2_port, db2_database,
                  sqlserver_server, sqlserver_database, sqlserver_user, sqlserver_pw):
@@ -286,3 +457,4 @@ class TableModifier:
             self.logger.info(f"Columns altered, index created, and primary key constraint set on table {table}.")
         else:
             self.logger.error(f"Unable to alter columns, create index, and set primary key constraint on table {table}.")
+            
