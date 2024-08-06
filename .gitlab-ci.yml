@@ -14,4 +14,4 @@ deploy_to_github:
     - git remote add github https://$GITHUB_TOKEN@github.com/nguyenngocbinh/ews.git
     - git push --mirror github
   only:
-    - master
+    - main
